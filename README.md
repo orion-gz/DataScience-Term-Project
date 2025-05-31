@@ -121,7 +121,7 @@ def check_and_remove_wrong_value(df_model):
   if 'metacritic' in df_model.columns:
     if (df_model['metacritic'] < 0).any(): all_indices_to_drop = all_indices_to_drop.union(df_model[df_model['metacritic'] < 0].index)
     if (df_model['metacritic'] > 100).any(): all_indices_to_drop = all_indices_to_drop.union(df_model[df_model['metacritic'] > 100].index)
-  if 'rating' in df_model.columns: # Assumes 'rating' column exists
+  if 'rating' in df_model.columns:
     if (df_model['rating'] < 0).any(): all_indices_to_drop = all_indices_to_drop.union(df_model[df_model['rating'] < 0].index)
     if (df_model['rating'] > 5).any(): all_indices_to_drop = all_indices_to_drop.union(df_model[df_model['rating'] > 5].index)
   df_model_cleaned = df_model.drop(all_indices_to_drop).copy()
@@ -191,10 +191,8 @@ def preprocessing_rawg_data(
     filled_developers = True
 ):
   """
-  Main preprocessing function for the RAWG dataset, based on the notebook's logic.
-  Handles initial feature selection, missing data imputation, 
-  removal of rows with wrong values, target variable ('hit') creation,
-  and one-hot encoding of categorical features.
+  Main preprocessing function for the RAWG dataset.
+  Handles initial feature selection, missing data imputation, removal of rows with wrong values, target variable ('hit') creation, and one-hot encoding of categorical features.
   NOTE: Scaling is NOT performed here and should be done after train/test split.
 
   @param raw_df (DataFrame): The raw RAWG games dataset.
@@ -291,8 +289,6 @@ def run_logistic_regression(
   @param random_state (int): Seed for random operations.
   @param selector_instance (sklearn.feature_selection selector or None): Feature selector for the pipeline.
   @param model_params_grid (list of dict or dict): Parameter grid for GridSearchCV.
-                                                  Should include params for scaler (as 'data_preprocessor__num__scaler'),
-                                                  selector (as 'selector__<param>'), and model (as 'model__<param>').
   @param cv_fold_count (int): Number of CV folds.
   @param main_scoring_metric (str): Metric for GridSearchCV optimization.
 
@@ -397,18 +393,20 @@ def run_logistic_regression(
 
   print("--- Logistic Regression Experiment Complete ---")
   return optimized_pipeline_model, evaluation_metrics_dict, optimal_hyperparameters
+```
 
-How to Use
-Load Raw Data:
+# How to Use
+1. Load Raw Data:
 
+```python
 import pandas as pd
 # df_raw = pd.read_csv("path/to/your/rawg_games_data.csv") 
-# Example: using the 'df' variable from the notebook's cell 400
-df_raw = df 
+```
 
-Run Preprocessing:
+2. Run Preprocessing:
 This step utilizes the helper functions (get_filled_genres, get_filled_developers, check_and_remove_wrong_value, OHE) internally.
 
+```python
 X_processed, y_target = preprocessing_rawg_data(
     raw_df=df_raw
     # Other parameters like top_n_tags can be set here if needed
@@ -432,41 +430,36 @@ if 'X_processed' in locals():
             'model__C': [0.01, 0.1, 1.0, 5.0, 10.0],
             'model__class_weight': ['balanced', {0:1, 1:1.5}, {0:1, 1:2}, {0:1, 1:2.5}, {0:1, 1:3}]
         },
-        # Add more dictionaries for other solver/penalty combinations if desired
-        # Example for 'saga' solver (supports l1, l2, elasticnet, none for penalty)
-        # { 
-        #     'data_preprocessor__num__scaler': [StandardScaler(), RobustScaler(), MinMaxScaler(), 'passthrough'],
-        #     'selector__k': [50, 100, 150, X_processed.shape[1]],
-        #     'model__solver': ['saga'],
-        #     'model__penalty': ['l1', 'l2'], # 'elasticnet' requires 'l1_ratio'
-        #     'model__C': [0.01, 0.1, 1.0, 5.0, 10.0],
-        #     'model__class_weight': ['balanced', {0:1, 1:1.5}, {0:1, 1:2}]
-        # }
+        { 
+            'data_preprocessor__num__scaler': [StandardScaler(), RobustScaler(), MinMaxScaler(), 'passthrough'],
+            'selector__k': [50, 100, 150, X_processed.shape[1]],
+            'model__solver': ['saga'],
+            'model__penalty': ['l1', 'l2'], # 'elasticnet' requires 'l1_ratio'
+            'model__C': [0.01, 0.1, 1.0, 5.0, 10.0],
+            'model__class_weight': ['balanced', {0:1, 1:1.5}, {0:1, 1:2}]
+        }
     ]
 else:
     print("X_processed is not defined. Cannot set 'selector__k' dynamically.")
     param_grid_list_for_lr = [] # Or a default grid not dependent on X_processed.shape
 ```
 
-**Run Logistic Regression Experiment**
+3. **Run Logistic Regression Experiment**
 
-```pythob
-if 'X_processed' in locals() and 'y_target' in locals() and param_grid_list_for_lr:
-    best_lr_model, lr_metrics, lr_params = run_logistic_regression(
-        X_processed, 
-        y_target,   
-        numerical_feature_names=numerical_features, 
-        selector_instance=SelectKBest(score_func=f_classif), # Pass the selector instance
-        model_params_grid=param_grid_list_for_lr, 
-        main_scoring_metric='f1_weighted' # Or 'roc_auc', etc.
-    )
-    print("\nLogistic Regression - Best Overall Tuned Parameters:", lr_params)
-    print("Logistic Regression - Final Test Set Metrics (Tuned):", lr_metrics)
-else:
-    print("Please ensure 'X_processed', 'y_target', 'numerical_features', and 'param_grid_list_for_lr' are defined.")
+```python
+best_lr_model, lr_metrics, lr_params = run_logistic_regression(
+   X_processed, 
+   y_target,   
+   numerical_feature_names=numerical_features, 
+   selector_instance=SelectKBest(score_func=f_classif), # Pass the selector instance
+   model_params_grid=param_grid_list_for_lr, 
+   main_scoring_metric='f1_weighted' # Or 'roc_auc', etc.
+)
+print("\nLogistic Regression - Best Overall Tuned Parameters:", lr_params)
+print("Logistic Regression - Final Test Set Metrics (Tuned):", lr_metrics)
 ```
 
-Dependencies
+# Dependencies
 * pandas
 * numpy
 * scikit-learn
