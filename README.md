@@ -8,9 +8,13 @@ The pipeline encompasses data cleaning, feature engineering (including one-hot e
 
 The primary objective is to develop an optimal model pipeline for predicting game success (hit/non-hit) using the RAWG dataset. This involves systematically experimenting with various preprocessing techniques, feature selection methods, and model hyperparameters, and creating functions to automate this process. This notebook can serve as a practical example of applying a machine learning workflow to game data.
 
-## Dataset
+## [Dataset](https://huggingface.co/datasets/atalaydenknalbant/rawg-games-dataset)
 
 The dataset used is the "RAWG Video Games Dataset," obtainable from sources like Hugging Face Datasets (`atalaydenknalbant/rawg-games-dataset`) or a provided CSV file (`rawg_games_data.csv`).
+
+```python
+df = pd.read_csv("hf://datasets/atalaydenknalbant/rawg-games-dataset/rawg_games_data.csv")
+```
 
 Features Overview
 * `name`: Name of the game.
