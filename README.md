@@ -413,35 +413,31 @@ X_processed, y_target = preprocessing_rawg_data(
 )
 # Define numerical features for scaling (based on columns remaining in X_processed after OHE)
 numerical_features = ['metacritic', 'playtime'] 
-
-Define Parameter Grid for run_logistic_regression:
+```
+3. Define Parameter Grid for run_logistic_regression:
 This grid allows GridSearchCV to test different scalers, feature selection k values, and logistic regression hyperparameters.
-
+```python
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.feature_selection import SelectKBest, f_classif
 
-if 'X_processed' in locals():
-    param_grid_list_for_lr = [
-        { 
-            'data_preprocessor__num__scaler': [StandardScaler(), RobustScaler(), MinMaxScaler(), 'passthrough'], 
-            'selector__k': [50, 100, 150, X_processed.shape[1]], # Use all features if X_processed is defined
-            'model__solver': ['liblinear'],
-            'model__penalty': ['l1', 'l2'],
-            'model__C': [0.01, 0.1, 1.0, 5.0, 10.0],
-            'model__class_weight': ['balanced', {0:1, 1:1.5}, {0:1, 1:2}, {0:1, 1:2.5}, {0:1, 1:3}]
-        },
-        { 
-            'data_preprocessor__num__scaler': [StandardScaler(), RobustScaler(), MinMaxScaler(), 'passthrough'],
-            'selector__k': [50, 100, 150, X_processed.shape[1]],
-            'model__solver': ['saga'],
-            'model__penalty': ['l1', 'l2'], # 'elasticnet' requires 'l1_ratio'
-            'model__C': [0.01, 0.1, 1.0, 5.0, 10.0],
-            'model__class_weight': ['balanced', {0:1, 1:1.5}, {0:1, 1:2}]
-        }
-    ]
-else:
-    print("X_processed is not defined. Cannot set 'selector__k' dynamically.")
-    param_grid_list_for_lr = [] # Or a default grid not dependent on X_processed.shape
+param_grid_list_for_lr = [
+   { 
+      'data_preprocessor__num__scaler': [StandardScaler(), RobustScaler(), MinMaxScaler(), 'passthrough'], 
+      'selector__k': [50, 100, 150, X_processed.shape[1]], # Use all features if X_processed is defined
+      'model__solver': ['liblinear'],
+      'model__penalty': ['l1', 'l2'],
+      'model__C': [0.01, 0.1, 1.0, 5.0, 10.0],
+      'model__class_weight': ['balanced', {0:1, 1:1.5}, {0:1, 1:2}, {0:1, 1:2.5}, {0:1, 1:3}]
+   },
+   { 
+      'data_preprocessor__num__scaler': [StandardScaler(), RobustScaler(), MinMaxScaler(), 'passthrough'],
+      'selector__k': [50, 100, 150, X_processed.shape[1]],
+      'model__solver': ['saga'],
+      'model__penalty': ['l1', 'l2'], # 'elasticnet' requires 'l1_ratio'
+      'model__C': [0.01, 0.1, 1.0, 5.0, 10.0],
+      'model__class_weight': ['balanced', {0:1, 1:1.5}, {0:1, 1:2}]
+   }
+]
 ```
 
 3. **Run Logistic Regression Experiment**
