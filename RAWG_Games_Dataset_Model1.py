@@ -24,7 +24,6 @@ def get_filled_genres(
   @return df_model (DataFrame): RAWG games data with NaN genres filled.
   """
   # Pre-defined list of genres to fill NaN values.
-  # The commented-out lines are kept as in the original notebook.
   filled_genres_list = [
     "Shooter, Arcade",                             # 1. Time Crisis 3
     "Shooter, Arcade",                             # 2. Time Crisis II
@@ -79,7 +78,6 @@ def get_filled_developers(
   """
 
   # Pre-defined list of developers to fill NaN values
-  # This list should correspond to the 101 NaN developer entries identified in the notebook.
   filled_developers_list = [
     "Nintendo EPD, Grezzo", "Blizzard Entertainment", "Blizzard Entertainment", "EA Canada",
     "Blizzard Entertainment", "Team Ninja, Tecmo", "Blizzard Entertainment, Iron Galaxy",
@@ -302,7 +300,7 @@ def preprocessing_rawg_data(
         if col not in raw_df.columns:
             print(f"Error: Column '{col}' not found in raw_df.")
             # raw_df = pd.read_csv("hf://datasets/atalaydenknalbant/rawg-games-dataset/rawg_games_data.csv")
-            # df_model = raw_df[required_cols].copy() # Corrected to use required_cols
+            # df_model = raw_df[required_cols].copy() 
             raise KeyError(f"Column '{col}' not found in raw_df.")
     df_model = raw_df[required_cols].copy()
   except NameError:
@@ -334,7 +332,7 @@ def preprocessing_rawg_data(
 
   # --- Feature Creation ---
   # Create binary target variable 'hit'
-  df_model['hit'] = 0 # Initialize 'hit' column
+  df_model['hit'] = 0 
   df_model[target_column_original] = pd.to_numeric(df_model[target_column_original], errors='coerce')
   df_model.loc[df_model[target_column_original] >= rating_threshold, 'hit'] = 1
   df_model['hit'] = df_model['hit'].astype(int)
@@ -378,10 +376,9 @@ def run_logistic_regression(
 ):
   """
   Builds, tunes, and evaluates a Logistic Regression pipeline using GridSearchCV.
-  This function takes preprocessed features (X) and a target (y),
+  This function takes preprocessed features (X) and a target (y), 
   applies train/test split, creates a ColumnTransformer for scaling numerical features,
-  optionally performs feature selection, and then tunes/trains
-  a Logistic Regression model.
+  optionally performs feature selection, and then tunes/trains a Logistic Regression model.
 
   @param X (DataFrame): DataFrame of preprocessed features. OHE should be done.
   @param y (Series): Target variable.
@@ -494,9 +491,10 @@ def run_logistic_regression(
   fpr, tpr, thresholds_roc = roc_curve(y_test, y_proba_test)
   roc_auc_value = auc(fpr, tpr)
 
+  # Plot ROC Curve
   plt.figure(figsize=(8, 6))
   plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc_value:.2f})')
-  plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--') # Random guess line
+  plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--') 
   plt.xlim([0.0, 1.0])
   plt.ylim([0.0, 1.05])
   plt.xlabel('False Positive Rate (1 - Specificity)')
@@ -509,7 +507,7 @@ def run_logistic_regression(
   
   return optimized_pipeline_model, evaluation_metrics_dict, optimal_hyperparameters
 
-
+# Main execution block to run the logistic regression experiment
 if __name__ == "__main__":
     raw_df = pd.read_csv("/Users/orion-gz/Desktop/Project/PYTHON/rawg_games_data.csv")
     X_processed, y_target = preprocessing_rawg_data(raw_df)
