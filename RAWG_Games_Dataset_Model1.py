@@ -256,7 +256,7 @@ def OHE(
   # Concatenate the new OHE columns with the output DataFrame
   df_model_output = pd.concat([df_model_output, df_ohe_cols], axis=1)
 
-  return df_model_output
+  return df_model_output, df_ohe_cols.columns.tolist()
 
 
 # define preprocessing RAWG games data
@@ -346,21 +346,21 @@ def preprocessing_rawg_data(
   # One-Hot Encode 'tags', 'genres', 'developers' using the custom OHE function
   # The OHE will add new columns to X
   if 'tags' in X.columns:
-    X = OHE(X, 'tags', prefix='tag', top_n=top_n_tags)
+    X, top_n_tags_list = OHE(X, 'tags', prefix='tag', top_n=top_n_tags)
 
   if 'genres' in X.columns:
     # If top_n_genres is passed as e.g. 19, it will take top 19.
     # If top_n_genres is None, OHE uses all unique.
-    X = OHE(X, 'genres', prefix='genre', top_n=top_n_genres)
+    X, top_n_genres_list = OHE(X, 'genres', prefix='genre', top_n=top_n_genres)
 
   if 'developers' in X.columns:
-    X = OHE(X, 'developers', prefix='dev', least_n=developer_min_game_count)
+    X, top_n_devs_list = OHE(X, 'developers', prefix='dev', least_n=developer_min_game_count)
 
   # Drop original text columns and 'name' from the feature set X
   cols_to_drop_from_X = ['name', 'genres', 'developers', 'tags']
   X.drop(columns=cols_to_drop_from_X, inplace=True, errors='ignore')
 
-  return X, y
+  return X, y, top_n_genres_list, top_n_tags_list, top_n_devs_list
 
 
 def run_logistic_regression(
@@ -477,6 +477,15 @@ def run_logistic_regression(
           print(f"{metric_name} : {score_value:.4f}")
       else:
           print(f"{metric_name} :\n{np.array(score_value)}")
+          
+  result_df = pd.DataFrame({
+      '실제': y_test,
+      '예측': y_predict_test,
+      'Hit 확률': y_proba_test
+  })
+  print(result_df.reset_index())
+  print(f"Hit인 게임의 개수 : {len(result_df.loc[result_df['예측'] > 0.5])}")
+  print(f"Non Hit인 게임의 개수 : {len(result_df.loc[result_df['예측'] < 0.5])}")
 
   # Plot Confusion Matrix
   plt.figure(figsize=(6,4))
@@ -503,14 +512,18 @@ def run_logistic_regression(
   plt.legend(loc="lower right")
   plt.grid(True)
   plt.show()
+  
+  print("--- Logistic Regression Results ---")
+  print(optimized_pipeline_model.predict_proba(X_test)[:, 1])
+  print(optimized_pipeline_model.predict(X_test))
   print("--- Logistic Regression Experiment Complete ---")
   
   return optimized_pipeline_model, evaluation_metrics_dict, optimal_hyperparameters
-
+  
 # Main execution block to run the logistic regression experiment
 if __name__ == "__main__":
-    raw_df = pd.read_csv("/Users/orion-gz/Desktop/Project/PYTHON/rawg_games_data.csv")
-    X_processed, y_target = preprocessing_rawg_data(raw_df)
+    raw_df = pd.read_csv("/Users/orion-gz/Desktop/Project/PYTHON/Term_Project/rawg_games_data.csv")
+    X_processed, y_target, top_n_genres_list, top_n_tags_list, top_n_devs_list = preprocessing_rawg_data(raw_df)
     numerical_features = ['metacritic', 'playtime']
     param_grid_list = [
         { 
@@ -541,5 +554,5 @@ if __name__ == "__main__":
     )
     print("Logistic Regression - Best Overall Tuned Parameters:", lr_params_tuned)
     print("Logistic Regression - Final Test Set Metrics (Tuned):", lr_metrics_tuned)
-   
     
+    print("predicting game hit using the best tuned model...")
